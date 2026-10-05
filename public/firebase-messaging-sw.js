@@ -17,16 +17,29 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// Helper to get asset base URL for GitHub Pages
+const getAssetBase = () => {
+  const url = self.location.href;
+  // If we're at /AI_College_companion/..., return that base
+  if (url.includes('/AI_College_companion/')) {
+    return '/AI_College_companion/';
+  }
+  return '/';
+};
+
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle =
     payload.notification?.title || "AI College Companion";
+
+  const assetBase = getAssetBase();
+  const iconUrl = `${assetBase}favicon.ico`;
 
   const notificationOptions = {
     body:
       payload.notification?.body ||
       "You have a new notification.",
-    icon: "/favicon.ico",
-    badge: "/favicon.ico",
+    icon: iconUrl,
+    badge: iconUrl,
     data: payload.data || {},
   };
 
@@ -40,11 +53,15 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const requestedUrl = event.notification?.data?.url;
-  const targetUrl =
-    typeof requestedUrl === "string" &&
-    requestedUrl.startsWith("/")
-      ? requestedUrl
-      : "/";
+  const assetBase = getAssetBase();
+  
+  let targetUrl = "/";
+  if (typeof requestedUrl === "string" && requestedUrl.startsWith("/")) {
+    // Ensure the URL includes the base path for GitHub Pages
+    targetUrl = assetBase === '/' ? requestedUrl : `${assetBase}${requestedUrl.substring(1)}`;
+  } else {
+    targetUrl = assetBase === '/' ? "/" : assetBase;
+  }
 
   event.waitUntil(
     clients.matchAll({
