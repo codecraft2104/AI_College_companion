@@ -1,0 +1,294 @@
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods":
+    "POST, OPTIONS",
+};
+
+Deno.serve(async (req) => {
+  // =========================================
+  // CORS
+  // =========================================
+
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: corsHeaders,
+    });
+  }
+
+  try {
+    // =========================================
+    // ONLY POST REQUESTS
+    // =========================================
+
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({
+          error: "Only POST requests are allowed.",
+        }),
+        {
+          status: 405,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    // =========================================
+    // GET GEMINI API KEY
+    // =========================================
+
+    const GEMINI_API_KEY =
+      Deno.env.get("GEMINI_API_KEY");
+
+    if (!GEMINI_API_KEY) {
+      throw new Error(
+        "GEMINI_API_KEY is not configured."
+      );
+    }
+
+    // =========================================
+    // GET REQUEST DATA
+    // =========================================
+
+    const body = await req.json();
+
+    const {
+      language,
+      topic,
+      question,
+      difficulty,
+    } = body;
+
+    if (!language || !topic || !question) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Language, topic and question are required.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json",
+          },
+        }
+      );
+    }
+
+    // =========================================
+    // PROMPT
+    // =========================================
+
+    const prompt = `
+You are an expert programming lab instructor
+helping college students.
+
+Generate a complete programming lab solution
+based on the information below.
+
+Programming Language:
+${language}
+
+Topic:
+${topic}
+
+Question:
+${question}
+
+Difficulty:
+${difficulty || "medium"}
+
+Return the answer ONLY as valid JSON.
+
+Do not use markdown code fences.
+
+Use exactly this JSON structure:
+
+{
+  "title": "Program title",
+  "language": "${language}",
+  "topic": "${topic}",
+  "program": "Complete source code",
+  "algorithm": [
+    "Step 1",
+    "Step 2",
+    "Step 3"
+  ],
+  "explanation": "Simple explanation of the program",
+  "sample_input": "Sample input if required, otherwise Not Applicable",
+  "sample_output": "Sample output",
+  "important_points": [
+    "Important point 1",
+    "Important point 2"
+  ],
+  "viva_questions": [
+    {
+      "question": "Viva question",
+      "answer": "Simple answer"
+    }
+  ]
+}
+
+Requirements:
+
+1. Give complete runnable code.
+2. Keep the code suitable for a college lab.
+3. Use simple programming concepts where possible.
+4. Explain the program in beginner-friendly language.
+5. Give a clear step-by-step algorithm.
+6. Include realistic sample input and output.
+7. Give 5 useful viva questions with answers.
+8. Do not include unnecessary advanced concepts.
+9. Make sure the generated code matches the requested language.
+`;
+
+    // =========================================
+    // GEMINI API
+    // =========================================
+
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" +
+        GEMINI_API_KEY,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+
+          generationConfig: {
+            temperature: 0.4,
+            responseMimeType:
+              "application/json",
+          },
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    // =========================================
+    // GEMINI ERROR
+    // =========================================
+
+    if (!response.ok) {
+      console.error(
+        "Gemini API Error:",
+        result
+      );
+
+      return new Response(
+        JSON.stringify({
+          error:
+            result?.error?.message ||
+            "Gemini API request failed.",
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json",
+          },
+        }
+      );
+    }
+
+    // =========================================
+    // GET GENERATED TEXT
+    // =========================================
+
+    const generatedText =
+      result?.candidates?.[0]?.content
+        ?.parts?.[0]?.text;
+
+    if (!generatedText) {
+      throw new Error(
+        "No response was generated by Gemini."
+      );
+    }
+
+    // =========================================
+    // PARSE JSON
+    // =========================================
+
+    let programData;
+
+    try {
+      programData =
+        JSON.parse(generatedText);
+    } catch (parseError) {
+      console.error(
+        "JSON parsing error:",
+        parseError
+      );
+
+      console.error(
+        "Generated text:",
+        generatedText
+      );
+
+      throw new Error(
+        "AI returned an invalid response."
+      );
+    }
+
+    // =========================================
+    // RETURN RESPONSE
+    // =========================================
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: programData,
+      }),
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type":
+            "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error(
+      "AI Lab Program Generator Error:",
+      error
+    );
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong.",
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type":
+            "application/json",
+        },
+      }
+    );
+  }
+});

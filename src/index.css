@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #171321;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(124, 58, 237, .06), transparent 27rem),
+    radial-gradient(circle at 88% 18%, rgba(79, 70, 229, .05), transparent 24rem),
+    #ffffff;
+}
+
+button, input, textarea, select { font: inherit; }
+button, a { transition: all .2s ease; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+.app-shell { min-height: 100vh; color: #171321; }
+.page-surface { flex: 1; min-width: 0; }
+.premium-card {
+  border: 1px solid #e9e2f5;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 35px rgba(46, 16, 101, .07);
+}
+.premium-card:hover { border-color: #d4c3f1; }
+.gradient-button {
+  border-radius: 11px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(109, 40, 217, .18);
+}
+.gradient-button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.muted-label { color: #6b5b83; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+
+.auth-page { background: linear-gradient(135deg, #faf8ff, #ffffff 55%, #f7f3ff); }
+.auth-card { border-color: #e7def5; background: #ffffff; box-shadow: 0 24px 70px rgba(46, 16, 101, .10); }
+.auth-card input { color: #171321; background: #ffffff; border-color: #d8cde8; }
+.auth-card input::placeholder { color: #827990; }
+
+/* Translate legacy utility colors used across the existing pages to the light theme. */
+.bg-slate-50 { background-color: #faf9fc !important; }
+.bg-white { background-color: #ffffff !important; }
+.bg-blue-50, .bg-blue-50\/60 { background-color: #f3edff !important; }
+.bg-blue-600 { background-color: #ddd0f7 !important; }
+.bg-blue-700 { background-color: #cdbbea !important; }
+.bg-white\/\[\.03\], .bg-white\/\[\.025\], .bg-white\/10,
+.bg-white\/\[\.05\] { background-color: #f7f4fc !important; }
+.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600 { color: #171321 !important; }
+.text-slate-500, .text-slate-400 { color: #625a6e !important; }
+.text-white { color: #171321 !important; }
+.text-violet-300, .text-violet-400, .text-indigo-300, .text-fuchsia-300 { color: #6d28d9 !important; }
+.text-blue-600 { color: #6d28d9 !important; }
+.text-blue-800 { color: #4c1d95 !important; }
+.border, .border-b, .border-r, .border-slate-200 { border-color: #e9e2f5 !important; }
+.border-white\/10 { border-color: #e9e2f5 !important; }
+.shadow-sm, .shadow-2xl { box-shadow: 0 12px 35px rgba(46, 16, 101, .08) !important; }
+input, textarea, select {
+  color: #171321;
+  background-color: #ffffff;
+  border-color: #d8cde8 !important;
+}
+input::placeholder, textarea::placeholder { color: #827990; }
+[class*="bg-[#"] { background-color: #ffffff !important; }
+[class*="bg-gradient-to-br"][class*="from-violet-950"] {
+  background-image: linear-gradient(135deg, #f5efff, #ffffff) !important;
+}
+
+@media (max-width: 900px) {
+  .desktop-sidebar { width: 82px !important; padding: 16px 10px !important; }
+  .desktop-sidebar .nav-label, .desktop-sidebar .brand-copy, .desktop-sidebar .section-label { display: none; }
+  .desktop-sidebar nav a, .desktop-sidebar .account-link { justify-content: center; padding-inline: 10px; }
+}
+@media (max-width: 640px) {
+  .desktop-sidebar { display: none; }
+  .page-surface main { padding: 22px 16px !important; }
+}
