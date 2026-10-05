@@ -1,6 +1,14 @@
 import { listenForForegroundMessages } from "./firebaseNotificationService";
 import { registerFCMToken } from "./fcmService";
 
+// Get the base URL for assets, accounting for GitHub Pages subpath
+const getAssetBase = () => {
+  if (import.meta.env.PROD) {
+    return '/AI_College_companion/';
+  }
+  return '/';
+};
+
 export const initializeFirebaseNotifications =
   async () => {
     try {
@@ -8,6 +16,8 @@ export const initializeFirebaseNotifications =
       if (registration.status !== "registered") {
         return () => undefined;
       }
+
+      const assetBase = getAssetBase();
 
       const unsubscribe = await listenForForegroundMessages((payload) => {
         const title = payload.notification?.title || "AI College Companion";
@@ -19,7 +29,7 @@ export const initializeFirebaseNotifications =
         ) {
           new Notification(title, {
             body,
-            icon: "/favicon.ico",
+            icon: `${assetBase}favicon.ico`,
             data: payload.data,
           });
         }
